@@ -1,0 +1,23 @@
+# 本地配置
+.workbuddy/
+
+# 前端构建产物
+knowledge-hub/dist/
+knowledge-hub/node_modules/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+
+#  IDE
+.vscode/
+.idea/
+
+# 操作系统
+.DS_Store
+Thumbs.db

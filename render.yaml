@@ -1,0 +1,28 @@
+# Render 部署配置
+# 使用方法：在 Render 控制台连接 GitHub 仓库，选择 "Blueprint" 部署
+
+services:
+  # 一体化部署：后端 API + 前端静态文件
+  - type: web
+    name: knowledge-hub
+    env: python
+    plan: free
+    rootDir: knowledge-hub/backend
+    
+    # 构建命令：先构建前端，再安装后端依赖
+    buildCommand: |
+      cd .. && npm install && npm run build && cd backend && pip install -r requirements.txt
+    
+    # 启动命令
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    
+    # 环境变量
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.12
+      - key: RENDER
+        value: "true"
+    
+    # 健康检查和启动检查
+    healthCheckPath: /
+    preDeployCommand: echo "Starting deployment..."
