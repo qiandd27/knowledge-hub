@@ -7,6 +7,7 @@ from sqlalchemy import select, func
 from typing import List, Optional
 import math
 import traceback
+import os
 import uvicorn
 
 # 导入本地模块
@@ -22,6 +23,12 @@ async def lifespan(app: FastAPI):
     # 启动时执行
     await init_db()
     print("[OK] 数据库已初始化")
+    # 导入种子数据（幂等：已有数据则跳过）
+    try:
+        from seed_data import seed_data as seed_fn
+        await seed_fn()
+    except Exception as e:
+        print(f"[WARN] 种子数据导入失败: {e}")
     yield
     # 关闭时执行（可选）
     await engine.dispose()
@@ -37,31 +44,6 @@ app = FastAPI(
     openapi_url="/api/openapi.json",
     lifespan=lifespan  # 使用新的lifespan事件处理器
 )
-
-# 静态文件服务（生产环境提供前端）
-import os
-FRONTEND_BUILD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "dist")
-
-if os.path.exists(FRONTEND_BUILD_DIR):
-    from fastapi.staticfiles import StaticFiles
-    from fastapi.responses import FileResponse
-
-    # SPA fallback：所有非API路由返回 index.html
-    @app.get("/{fullpath:path}")
-    async def serve_spa(fullpath: str):
-        """提供前端 SPA（单页应用）"""
-        # 如果是 API 路由，不拦截
-        if fullpath.startswith("api/"):
-            raise HTTPException(status_code=404, detail="Not found")
-        file_path = os.path.join(FRONTEND_BUILD_DIR, fullpath)
-        if os.path.isfile(file_path):
-            return FileResponse(file_path)
-        # SPA fallback：返回 index.html
-        return FileResponse(os.path.join(FRONTEND_BUILD_DIR, "index.html"))
-
-    print(f"[OK] SPA 服务已启用：{FRONTEND_BUILD_DIR}")
-else:
-    print(f"[WARN] 前端构建目录不存在：{FRONTEND_BUILD_DIR}")
 
 # CORS 中间件（允许前端访问）- 从环境变量读取，支持灵活配置
 ALLOWED_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(",")
@@ -320,6 +302,27 @@ async def root():
         "docs": "/api/docs",
         "redoc": "/api/redoc"
     }
+
+# ========== SPA 静态文件服务（必须放在所有 API 路由之后） ==========
+FRONTEND_BUILD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "dist")
+
+if os.path.exists(FRONTEND_BUILD_DIR):
+    from fastapi.staticfiles import StaticFiles
+    from fastapi.responses import FileResponse
+
+    # SPA fallback：所有非API路由返回 index.html
+    @app.get("/{fullpath:path}")
+    async def serve_spa(fullpath: str):
+        """提供前端 SPA（单页应用）- API已在前面匹配"""
+        file_path = os.path.join(FRONTEND_BUILD_DIR, fullpath)
+        if os.path.isfile(file_path):
+            return FileResponse(file_path)
+        # SPA fallback：返回 index.html
+        return FileResponse(os.path.join(FRONTEND_BUILD_DIR, "index.html"))
+
+    print(f"[OK] SPA 服务已启用：{FRONTEND_BUILD_DIR}")
+else:
+    print(f"[WARN] 前端构建目录不存在：{FRONTEND_BUILD_DIR}")
 
 # ========== 启动服务器 ==========
 if __name__ == "__main__":
