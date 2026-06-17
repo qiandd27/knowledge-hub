@@ -30,7 +30,7 @@ export default function KnowledgeDetail() {
   useEffect(() => {
     if (!id) return;
     setLoading(true);
-    fetchKnowledgeDetail(parseInt(id))
+    fetchKnowledgeDetail(parseInt(id, 10))
       .then(setData)
       .catch((err) => setError(`加载失败: ${err.message}`))
       .finally(() => setLoading(false));
@@ -109,10 +109,9 @@ export default function KnowledgeDetail() {
 
       {/* Content */}
       <div className="prose prose-invert max-w-none rounded-xl border border-gray-800 bg-[#0a0a0a] p-8">
-        <div
-          className="text-gray-300 leading-relaxed whitespace-pre-wrap"
-          dangerouslySetInnerHTML={{ __html: data.content }}
-        />
+        <pre className="text-gray-300 leading-relaxed whitespace-pre-wrap font-sans text-sm break-words">
+          {data.content}
+        </pre>
       </div>
 
       {/* Code Examples */}

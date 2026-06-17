@@ -20,7 +20,7 @@ export default function KnowledgeList() {
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
 
-  const page = parseInt(searchParams.get('page') || '1');
+  const page = parseInt(searchParams.get('page') || '1', 10);
   const categoryId = searchParams.get('category_id');
   const difficulty = searchParams.get('difficulty');
   const search = searchParams.get('search');
@@ -34,7 +34,7 @@ export default function KnowledgeList() {
         fetchKnowledgeList({
           page,
           page_size: 20,
-          category_id: categoryId ? parseInt(categoryId) : undefined,
+          category_id: categoryId ? parseInt(categoryId, 10) : undefined,
           difficulty: difficulty || undefined,
           search: search || undefined,
           order_by: orderBy,
@@ -73,7 +73,7 @@ export default function KnowledgeList() {
   };
 
   const currentCategory = categoryId
-    ? categories.find((c) => c.id === parseInt(categoryId))
+    ? categories.find((c) => c.id === parseInt(categoryId, 10))
     : null;
 
   const hasFilters = !!(categoryId || difficulty || search);

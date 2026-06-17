@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 
@@ -24,8 +24,7 @@ class CategoryResponse(CategoryBase):
     id: int
     created_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # ========== 标签 Schemas ==========
 class TagBase(BaseModel):
@@ -44,8 +43,7 @@ class TagResponse(TagBase):
     count: int = 0
     created_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # ========== 知识点 Schemas ==========
 class KnowledgeBase(BaseModel):
@@ -57,12 +55,12 @@ class KnowledgeBase(BaseModel):
     importance: int = Field(default=3, ge=1, le=5)  # 1-5
     category_id: int
     subcategory: Optional[str] = None
-    code_examples: Optional[List[Dict[str, Any]]] = []
+    code_examples: Optional[List[Dict[str, Any]]] = Field(default_factory=list)
     video_url: Optional[str] = None
-    quiz: Optional[List[Dict[str, Any]]] = []
-    tags: Optional[List[str]] = []
+    quiz: Optional[List[Dict[str, Any]]] = Field(default_factory=list)
+    tags: Optional[List[str]] = Field(default_factory=list)
     source: Optional[str] = None
-    related_ids: Optional[List[int]] = []
+    related_ids: Optional[List[int]] = Field(default_factory=list)
 
 class KnowledgeCreate(KnowledgeBase):
     pass
@@ -90,10 +88,9 @@ class KnowledgeResponse(KnowledgeBase):
     created_at: datetime
     updated_at: datetime
     category: Optional[CategoryResponse] = None
-    tags_list: Optional[List[TagResponse]] = []
+    tags_list: Optional[List[TagResponse]] = Field(default_factory=list)
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class KnowledgeListItem(BaseModel):
     """知识点列表项（简化版，用于列表展示）"""
@@ -105,12 +102,11 @@ class KnowledgeListItem(BaseModel):
     importance: int
     category_id: int
     category_name: Optional[str] = None
-    tags: List[str] = []
+    tags: List[str] = Field(default_factory=list)
     view_count: int = 0
     created_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 # ========== 分页通用 Schemas ==========
 class PaginatedResponse(BaseModel):
@@ -159,5 +155,4 @@ class FeedbackResponse(FeedbackBase):
     status: str = "pending"
     created_at: datetime
     
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

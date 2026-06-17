@@ -4,18 +4,15 @@ from sqlalchemy import Column, Integer, String, Text, DateTime, Boolean, Float, 
 from sqlalchemy.sql import func
 import os
 
-# 数据库URL
+# 数据库URL - 支持环境变量覆盖，Render 生产环境用绝对路径持久化
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-# 优先使用 workspace 可写位置，再回退到项目相对路径
-WORKSPACE_DB = r"D:\workbuddy task\2026-06-17-00-54-20\knowledge-hub\data\knowledge.db"
-PROJECT_DB = os.path.join(BASE_DIR, "..", "data", "knowledge.db")
-DB_PATH = WORKSPACE_DB if os.path.exists(WORKSPACE_DB) else PROJECT_DB
-DATABASE_URL = f"sqlite+aiosqlite:///{DB_PATH}"
+DB_PATH = os.getenv("DATABASE_PATH", os.path.join(BASE_DIR, "..", "data", "knowledge.db"))
+DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite+aiosqlite:///{DB_PATH}")
 
-# 创建异步引擎
+# 创建异步引擎 - 生产环境关闭 SQL echo
 engine = create_async_engine(
     DATABASE_URL,
-    echo=True,  # 开发时打印SQL语句
+    echo=os.getenv("DB_ECHO", "false").lower() == "true",
 )
 
 # 创建异步会话

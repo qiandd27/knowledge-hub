@@ -63,13 +63,8 @@ if os.path.exists(FRONTEND_BUILD_DIR):
 else:
     print(f"[WARN] 前端构建目录不存在：{FRONTEND_BUILD_DIR}")
 
-# CORS 中间件（允许前端访问）
-# 生产环境需要添加 Render 域名
-ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "https://knowledge-hub-bckd.onrender.com",  # Render 后端域名
-]
+# CORS 中间件（允许前端访问）- 从环境变量读取，支持灵活配置
+ALLOWED_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(",")
 
 app.add_middleware(
     CORSMiddleware,

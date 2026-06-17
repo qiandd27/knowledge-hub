@@ -4,12 +4,12 @@ services:
     env: python
     plan: free
     region: oregon
-    buildCommand: |
-      cd frontend && npm install && npm run build
-      cd ../backend && pip install -r requirements.txt
+    rootDir: knowledge-hub
+    buildCommand: cd backend && pip install -r requirements.txt
     startCommand: cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
-      - key: DATABASE_URL
-        value: sqlite+aiosqlite:////opt/render/project/.renderdb/knowledge.db
       - key: PYTHON_VERSION
         value: 3.11.0
+      - key: RENDER
+        value: "true"
+    healthCheckPath: /
