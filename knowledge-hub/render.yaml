@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: knowledge-hub
+    env: python
+    plan: free
+    region: oregon
+    rootDir: knowledge-hub
+    buildCommand: |
+      cd frontend && npm install && npm run build
+      cd backend && pip install -r requirements.txt
+    startCommand: cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        value: sqlite:///./data/knowledge.db
+      - key: PYTHON_VERSION
+        value: 3.11.0

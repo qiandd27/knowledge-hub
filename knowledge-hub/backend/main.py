@@ -41,22 +41,25 @@ app = FastAPI(
 # 静态文件服务（生产环境提供前端）
 import os
 FRONTEND_BUILD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "dist")
+
 if os.path.exists(FRONTEND_BUILD_DIR):
     from fastapi.staticfiles import StaticFiles
     from fastapi.responses import FileResponse
-    
+
+    # SPA fallback：所有非API路由返回 index.html
     @app.get("/{fullpath:path}")
     async def serve_spa(fullpath: str):
         """提供前端 SPA（单页应用）"""
+        # 如果是 API 路由，不拦截
+        if fullpath.startswith("api/"):
+            raise HTTPException(status_code=404, detail="Not found")
         file_path = os.path.join(FRONTEND_BUILD_DIR, fullpath)
         if os.path.isfile(file_path):
             return FileResponse(file_path)
         # SPA fallback：返回 index.html
         return FileResponse(os.path.join(FRONTEND_BUILD_DIR, "index.html"))
-    
-    # 挂载静态文件（CSS/JS/图片等）
-    app.mount("/", StaticFiles(directory=FRONTEND_BUILD_DIR), name="static")
-    print(f"[OK] 静态文件服务已启用：{FRONTEND_BUILD_DIR}")
+
+    print(f"[OK] SPA 服务已启用：{FRONTEND_BUILD_DIR}")
 else:
     print(f"[WARN] 前端构建目录不存在：{FRONTEND_BUILD_DIR}")
 
@@ -311,30 +314,6 @@ async def update_feedback_status(
     if result is None:
         raise HTTPException(status_code=404, detail="反馈不存在")
     return {"message": f"反馈状态已更新为 {status}"}
-
-# ========== 静态文件服务（生产环境） ==========
-import os
-FRONTEND_BUILD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "dist")
-
-if os.path.exists(FRONTEND_BUILD_DIR):
-    from fastapi.staticfiles import StaticFiles
-    from fastapi.responses import FileResponse
-    
-    @app.get("/{fullpath:path}")
-    async def serve_spa(fullpath: str):
-        """提供前端 SPA（单页应用）"""
-        file_path = os.path.join(FRONTEND_BUILD_DIR, fullpath)
-        if os.path.isfile(file_path):
-            return FileResponse(file_path)
-        # SPA fallback：返回 index.html
-        index_path = os.path.join(FRONTEND_BUILD_DIR, "index.html")
-        if os.path.isfile(index_path):
-            return FileResponse(index_path)
-        return {"error": "index.html not found"}
-    
-    print(f"[OK] SPA 服务已启用：{FRONTEND_BUILD_DIR}")
-else:
-    print(f"[WARN] 前端构建目录不存在：{FRONTEND_BUILD_DIR}")
 
 # ========== 根路由 ==========
 @app.get("/")
